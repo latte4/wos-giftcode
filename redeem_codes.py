@@ -32,7 +32,7 @@ try:
     C_OCR = colorama.Fore.MAGENTA       # Purple/Magenta for OCR results
     C_DIM = colorama.Style.DIM          # Dim for less important details like fetch attempts
 except ImportError:
-    print("Warning: coloramaライブラリが見つかりません。ログ出力は色付けされません。")
+    print("警告: coloramaライブラリが見つかりません。ログ出力は色付けされません。")
     C_RESET = C_INFO = C_PROCESS = C_SUCCESS = C_ERROR = C_WARN = C_OCR = C_DIM = ""
 
 # Potentially Add CaptchaCracker
@@ -112,12 +112,12 @@ def parse_args():
         elif 'captchacracker' in ocr_choices: default_ocr = 'captchacracker'
         elif 'easyocr' in ocr_choices: default_ocr = 'easyocr'
 
-    if not EASYOCR_AVAILABLE: print("Warning: EasyOCRライブラリが見つかりません。")
-    if not CAPTCHA_CRACKER_AVAILABLE: print("Warning: CaptchaCrackerライブラリが見つかりません。")
-    if not DDDDOCR_AVAILABLE: print("Warning: ddddocrライブラリが見つかりません。")
+    if not EASYOCR_AVAILABLE: print("警告: EasyOCRライブラリが見つかりません。")
+    if not CAPTCHA_CRACKER_AVAILABLE: print("警告: CaptchaCrackerライブラリが見つかりません。")
+    if not DDDDOCR_AVAILABLE: print("警告: ddddocrライブラリが見つかりません。")
 
     if not ocr_choices:
-        print("CRITICAL ERROR: OCRライブラリ（EasyOCR、CaptchaCracker、またはddddocr）が見つかりません。少なくとも1つインストールしてください。")
+        print("致命的なエラー: OCRライブラリ (EasyOCR, CaptchaCracker, または ddddocr) が見つかりません。少なくとも1つインストールしてください。")
         sys.exit(1)
 
     parser.add_argument('--ocr-method', type=str, default=default_ocr, choices=ocr_choices,
@@ -134,13 +134,13 @@ args = parse_args()
 
 # --- Basic Sanity Checks ---
 if args.ocr_method == 'easyocr' and not EASYOCR_AVAILABLE:
-    print("Error: EasyOCRが選択されていますが利用できません。")
+    print("エラー: EasyOCRが選択されましたが、利用できません。")
     sys.exit(1)
 if args.ocr_method == 'captchacracker' and not CAPTCHA_CRACKER_AVAILABLE:
-    print("Error: キャプチャクラッカーは選択済みですが利用できません。")
+    print("エラー: CaptchaCrackerが選択されましたが、利用できません。")
     sys.exit(1)
 if args.ocr_method == 'ddddocr' and not DDDDOCR_AVAILABLE:
-    print("Error: ddddocr 選択済みですが利用不可です。")
+    print("エラー: ddddocrが選択されましたが、利用できません。")
     sys.exit(1)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -150,10 +150,9 @@ CAPTCHA_SAVE_DIR = os.path.join(script_dir, "captcha_images")
 try:
     os.makedirs(CAPTCHA_SAVE_DIR, exist_ok=True)
     rel = os.path.relpath(CAPTCHA_SAVE_DIR, script_dir)
-    print(f"キャプチャ画像用のディレクトリを作成しました: {rel}")
+    print(f"CAPTCHA画像用のディレクトリを作成しました: {rel}")
 except Exception as e:
-    print(f"ディレクトリの作成中にエラーが発生しました '{CAPTCHA_SAVE_DIR}': {str(e)}")
-
+    print(f"エラー: ディレクトリ '{CAPTCHA_SAVE_DIR}' の作成に失敗しました: {str(e)}")
 # --- Initialize OCR Readers ---
 easyocr_reader = None
 cc_apply_model = None
@@ -169,49 +168,49 @@ if args.ocr_method == 'easyocr' and EASYOCR_AVAILABLE:
                 num_gpus = torch.cuda.device_count()
                 gpu_id = args.use_gpu
                 if gpu_id < 0 or gpu_id >= num_gpus:
-                    print(f"EasyOCR: Invalid GPU device ID {gpu_id}. Available devices: 0..{num_gpus-1}. Falling back to CPU.")
+                    print(f"EasyOCR: 無効なGPUデバイスID {gpu_id}。利用可能なデバイス: 0..{num_gpus-1}。CPUにフォールバックします。")
                 else:
                     torch.cuda.set_device(gpu_id)
                     gpu_name = torch.cuda.get_device_name(gpu_id)
-                    print(f"EasyOCR: Attempting to use GPU device {gpu_id}: {gpu_name}")
+                    print(f"EasyOCR: GPUデバイス {gpu_id}: {gpu_name} を使用しようとしています。")
                     use_easyocr_gpu = True
             else:
-                print("EasyOCR: GPU requested, but no CUDA devices found by PyTorch.")
+                print("EasyOCR: GPUが要求されましたが、PyTorchでCUDAデバイスが見つかりませんでした。")
         except Exception as e:
-            print(f"EasyOCR: Error setting/checking GPU device {args.use_gpu}: {str(e)}. Falling back to CPU.")
+            print(f"EasyOCR: GPUデバイス {args.use_gpu} の設定/チェック中にエラーが発生しました: {str(e)}。CPUにフォールバックします。")
 
-    print(f"EasyOCR: Initializing reader (GPU={use_easyocr_gpu})...")
+    print(f"EasyOCR: リーダーを初期化しています (GPU={use_easyocr_gpu})...")
     try:
         easyocr_reader = easyocr.Reader(['en'], gpu=use_easyocr_gpu)
-        print(f"EasyOCR: Reader initialized on {'GPU' if use_easyocr_gpu else 'CPU'}.")
+        print(f"EasyOCR: リーダーは {'GPU' if use_easyocr_gpu else 'CPU'} で初期化されました。")
     except Exception as e:
-        print(f"EasyOCR: Initialization failed: {str(e)}. EasyOCR will be unavailable.")
+        print(f"EasyOCR: 初期化に失敗しました: {str(e)}。EasyOCRは利用できません。")
         EASYOCR_AVAILABLE = False
         if args.ocr_method == 'easyocr':
-            print("CRITICAL ERROR: Selected EasyOCR failed to initialize. Exiting.")
+            print("致命的なエラー: 選択されたEasyOCRの初期化に失敗しました。終了します。")
             sys.exit(1)
 
 # Initialize CaptchaCracker if needed
 if args.ocr_method == 'captchacracker' and CAPTCHA_CRACKER_AVAILABLE:
-    print("CaptchaCracker: Initializing ApplyModel...")
+    print("CaptchaCracker: ApplyModelを初期化しています...")
     try:
         import tensorflow as tf
         gpu_devices = tf.config.list_physical_devices('GPU')
         if gpu_devices:
-            print(f"CaptchaCracker (TensorFlow): Found GPU devices: {gpu_devices}")
+            print(f"CaptchaCracker (TensorFlow): GPUデバイスが見つかりました: {gpu_devices}")
         else:
-            print("CaptchaCracker (TensorFlow): No GPU found, will use CPU.")
+            print("CaptchaCracker (TensorFlow): GPUが見つかりませんでした。CPUを使用します。")
     except ImportError:
-        print("CaptchaCracker: TensorFlow not found (should be installed with CaptchaCracker).")
+        print("CaptchaCracker: TensorFlowが見つかりません (CaptchaCrackerと一緒にインストールされているはずです)。")
     except Exception as tf_err:
-        print(f"CaptchaCracker: Error checking TensorFlow GPU: {tf_err}")
+        print(f"CaptchaCracker: TensorFlow GPUのチェック中にエラーが発生しました: {tf_err}")
 
     # Actual ApplyModel initialization
     if not os.path.exists(CC_WEIGHTS_PATH):
-        print(f"CRITICAL ERROR: CaptchaCracker weights file not found at '{CC_WEIGHTS_PATH}'. Please ensure the path is correct relative to the script.")
+        print(f"致命的なエラー: CaptchaCrackerの重みファイルが \'{CC_WEIGHTS_PATH}\' に見つかりません。スクリプトに対するパスが正しいことを確認してください。")
         CAPTCHA_CRACKER_AVAILABLE = False
         if args.ocr_method == 'captchacracker':
-            print("Exiting as required CaptchaCracker model is missing.")
+            print("必要なCaptchaCrackerモデルが見つからないため終了します。")
             sys.exit(1)
 
     if CAPTCHA_CRACKER_AVAILABLE:
@@ -223,52 +222,52 @@ if args.ocr_method == 'captchacracker' and CAPTCHA_CRACKER_AVAILABLE:
                     max_length=CC_MAX_LENGTH,
                     characters=CC_CHARACTERS
             )
-            print(f"CaptchaCracker: ApplyModel loaded successfully from {CC_WEIGHTS_PATH}.")
+            print(f"CaptchaCracker: ApplyModelが {CC_WEIGHTS_PATH} から正常にロードされました。")
         except Exception as e:
-            print(f"CRITICAL ERROR: Failed to initialize CaptchaCracker ApplyModel: {e}")
-            print("Check weights path, dimensions, max_length, and characters configuration.")
+            print(f"致命的なエラー: CaptchaCracker ApplyModelの初期化に失敗しました: {e}")
+            print("重みパス、寸法、max_length、および文字設定を確認してください。")
             CAPTCHA_CRACKER_AVAILABLE = False
             if args.ocr_method == 'captchacracker':
-                print("Exiting as CaptchaCracker initialization failed.")
+                print("CaptchaCrackerの初期化に失敗したため終了します。")
                 sys.exit(1)
 
 # Initialize ddddocr if needed
 if args.ocr_method == 'ddddocr' and DDDDOCR_AVAILABLE:
-    print("DdddOcr: Initializing...")
+    print("DdddOcr: 初期化中...")
     try:
         ddddocr_ocr = ddddocr.DdddOcr(ocr=True, det=False, show_ad=False)
-        print("DdddOcr: Initialized successfully.")
-        try:
-            providers = ddddocr_ocr.onnx_session.get_providers()
-            print(f"DdddOcr (ONNX Runtime): Available execution providers: {providers}")
-            if 'CUDAExecutionProvider' in providers:
-                print("  -> CUDA (GPU) available for ONNX Runtime.")
-            elif 'DmlExecutionProvider' in providers:
-                print("  -> DirectML (GPU) available for ONNX Runtime.")
-            elif 'CoreMLExecutionProvider' in providers:
-                print("  -> CoreML (Apple Silicon) available for ONNX Runtime.")
-        except Exception as onnx_e:
-            print(f"DdddOcr: Could not query ONNX Runtime providers: {onnx_e}")
+        print("DdddOcr: 正常に初期化されました。")
+        # try:
+        #     providers = ddddocr_ocr.onnx_session.get_providers()
+        #     print(f"DdddOcr (ONNX Runtime): 利用可能な実行プロバイダー: {providers}")
+        #     if \'CUDAExecutionProvider\' in providers:
+        #         print("  -> CUDA (GPU) がONNX Runtimeで利用可能です。")
+        #     elif \'DmlExecutionProvider\' in providers:
+        #         print("  -> DirectML (GPU) がONNX Runtimeで利用可能です。")
+        #     elif \'CoreMLExecutionProvider\' in providers:
+        #         print("  -> CoreML (Apple Silicon) がONNX Runtimeで利用可能です。")
+        # except Exception as onnx_e:
+        #     print(f"DdddOcr: ONNX Runtimeプロバイダーをクエリできませんでした: {onnx_e}")
 
     except Exception as e:
-        print(f"CRITICAL ERROR: Failed to initialize DdddOcr: {e}")
+        print(f"致命的なエラー: DdddOcrの初期化に失敗しました: {e}")
         DDDDOCR_AVAILABLE = False
         if args.ocr_method == 'ddddocr':
-            print("Exiting as ddddocr initialization failed.")
+            print("ddddocrの初期化に失敗したため終了します。")
             sys.exit(1)
 
 RESULT_MESSAGES = {
-    "SUCCESS": "Successfully redeemed",
-    "RECEIVED": "Already redeemed",
-    "SAME TYPE EXCHANGE": "Successfully redeemed (same type)",
-    "TIME ERROR": "Code has expired",
-    "TIMEOUT RETRY": "Server requested retry",
-    "USED": "Claim limit reached, unable to claim",
-    "Server requested retry": "Server requested retry",
-    "CAPTCHA CHECK ERROR": "Captcha Check Error (Server Validation Failed)",
-    "CAPTCHA CHECK TOO FREQUENT": "Captcha Check Too Frequent (Rate Limit)",
-    "Sign Error": "Sign Error (Request Encoding Issue)",
-    "NOT LOGIN": "Not Logged In / Session Expired",
+    "SUCCESS": "正常に引き換えられました",
+    "RECEIVED": "すでに引き換え済みです",
+    "SAME TYPE EXCHANGE": "正常に引き換えられました（同タイプ）",
+    "TIME ERROR": "コードの有効期限が切れています",
+    "TIMEOUT RETRY": "サーバーが再試行を要求しました",
+    "USED": "引き換え上限に達しました",
+    "Server requested retry": "サーバーが再試行を要求しました",
+    "CAPTCHA CHECK ERROR": "CAPTCHAチェックエラー（サーバー検証失敗）",
+    "CAPTCHA CHECK TOO FREQUENT": "CAPTCHAチェック頻度が高すぎます（レート制限）",
+    "Sign Error": "署名エラー（リクエストエンコードの問題）",
+    "NOT LOGIN": "ログインしていません / セッションの有効期限が切れました",
 }
 
 counters = {
@@ -300,7 +299,7 @@ def preprocess_captcha_for_easyocr(image_np):
     elif len(image_np.shape) == 2:
         gray = image_np
     else:
-        print("Warning: Unexpected image shape in preprocess")
+        print("警告: 前処理で予期しない画像形状です。")
         return [] # Return empty list if input is weird
 
     # Method 1: Grayscale

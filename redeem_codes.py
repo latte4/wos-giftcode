@@ -32,7 +32,7 @@ try:
     C_OCR = colorama.Fore.MAGENTA       # Purple/Magenta for OCR results
     C_DIM = colorama.Style.DIM          # Dim for less important details like fetch attempts
 except ImportError:
-    print("Warning: colorama library not found. Log output will not be colored.")
+    print("Warning: coloramaライブラリが見つかりません。ログ出力は色付けされません。")
     C_RESET = C_INFO = C_PROCESS = C_SUCCESS = C_ERROR = C_WARN = C_OCR = C_DIM = ""
 
 # Potentially Add CaptchaCracker
@@ -112,12 +112,12 @@ def parse_args():
         elif 'captchacracker' in ocr_choices: default_ocr = 'captchacracker'
         elif 'easyocr' in ocr_choices: default_ocr = 'easyocr'
 
-    if not EASYOCR_AVAILABLE: print("Warning: EasyOCR library not found.")
-    if not CAPTCHA_CRACKER_AVAILABLE: print("Warning: CaptchaCracker library not found.")
-    if not DDDDOCR_AVAILABLE: print("Warning: ddddocr library not found.")
+    if not EASYOCR_AVAILABLE: print("Warning: EasyOCRライブラリが見つかりません。")
+    if not CAPTCHA_CRACKER_AVAILABLE: print("Warning: CaptchaCrackerライブラリが見つかりません。")
+    if not DDDDOCR_AVAILABLE: print("Warning: ddddocrライブラリが見つかりません。")
 
     if not ocr_choices:
-        print("CRITICAL ERROR: No OCR libraries (EasyOCR, CaptchaCracker, or ddddocr) found. Please install at least one.")
+        print("CRITICAL ERROR: OCRライブラリ（EasyOCR、CaptchaCracker、またはddddocr）が見つかりません。少なくとも1つインストールしてください。")
         sys.exit(1)
 
     parser.add_argument('--ocr-method', type=str, default=default_ocr, choices=ocr_choices,
@@ -134,13 +134,13 @@ args = parse_args()
 
 # --- Basic Sanity Checks ---
 if args.ocr_method == 'easyocr' and not EASYOCR_AVAILABLE:
-    print("Error: EasyOCR selected but not available.")
+    print("Error: EasyOCRが選択されていますが利用できません。")
     sys.exit(1)
 if args.ocr_method == 'captchacracker' and not CAPTCHA_CRACKER_AVAILABLE:
-    print("Error: CaptchaCracker selected but not available.")
+    print("Error: キャプチャクラッカーは選択済みですが利用できません。")
     sys.exit(1)
 if args.ocr_method == 'ddddocr' and not DDDDOCR_AVAILABLE:
-    print("Error: ddddocr selected but not available.")
+    print("Error: ddddocr 選択済みですが利用不可です。")
     sys.exit(1)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -150,9 +150,9 @@ CAPTCHA_SAVE_DIR = os.path.join(script_dir, "captcha_images")
 try:
     os.makedirs(CAPTCHA_SAVE_DIR, exist_ok=True)
     rel = os.path.relpath(CAPTCHA_SAVE_DIR, script_dir)
-    print(f"Created directory for captcha images: {rel}")
+    print(f"キャプチャ画像用のディレクトリを作成しました: {rel}")
 except Exception as e:
-    print(f"Error creating directory '{CAPTCHA_SAVE_DIR}': {str(e)}")
+    print(f"ディレクトリの作成中にエラーが発生しました '{CAPTCHA_SAVE_DIR}': {str(e)}")
 
 # --- Initialize OCR Readers ---
 easyocr_reader = None
